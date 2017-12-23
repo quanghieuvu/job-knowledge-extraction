@@ -1,4 +1,4 @@
-# How to Run this
+# Sent_CNN
 
 This is the DSSM version based on Word Embeddings and Convolutional Layers.
 

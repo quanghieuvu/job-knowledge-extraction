@@ -159,7 +159,7 @@ class SentCNN(object):
         
         # cosine layer - final scores and predictions
         with tf.name_scope("cosine_layer"):
-            self.dot =  tf.reduce_sum(tf.multiply(self.h_dropped_u, 
+            self.dot =  tf.reduce_sum(tf.multiply(self.h_dropped_u,
                                         self.h_dropped_r), 2)
             print "DEBUG: dot -> %s" % self.dot
             self.sqrt_u = tf.sqrt(tf.reduce_sum(self.h_dropped_u**2, 2))
@@ -180,4 +180,4 @@ class SentCNN(object):
         # Calculate Accuracy
         with tf.name_scope("accuracy"):
             correct_predictions = tf.equal(self.predictions, self.input_y)
-            self.accuracy = tf.reduce_mean(tf.cast(correct_predictions, "float"), name="accuracy")        
+            self.accuracy = tf.reduce_mean(tf.cast(correct_predictions, "float"), name="accuracy")
