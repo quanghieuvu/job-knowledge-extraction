@@ -213,8 +213,8 @@ def job_posting_data_preprocessing(input_file_path):
 
     with open(os.path.join(os.path.dirname(input_file_path), "job_post_preprocessed.tsv"), "w") as f:
         for index in range(np_data.shape[0]):
-            # Cutting job post after 100 words (To nod overload the network)
-            job_description = " ".join(np_data[index][0].split()[:100])
+            # Cutting job post after 50 words (Simple case for now)
+            job_description = " ".join(np_data[index][0].split()[:50])
             title = np_data[index][1]
             title = clean_custom(title).replace(" ", ".")
             job_description = clean_custom(job_description)

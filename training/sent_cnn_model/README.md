@@ -24,6 +24,13 @@ cd {ROOT_DIR}/training/sent_cnn_model
 python train_cnn.py
 ```
 
+Sometimes we observe unstability during the training for some datasets. If this happens you can try to change the input dataset by changing the number
+of words per job. (here 50). Taking all the words or 50 words looks stable where taking 100 words is unstable.
+
+``` python
+job_description = " ".join(np_data[index][0].split()[:50])
+```
+
 You can monitor your training on tensorboard by running:
 
 ``` sh
