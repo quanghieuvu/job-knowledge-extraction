@@ -1,5 +1,6 @@
 import numpy as np
 import re
+import os
 
 def get_evaluation_examples_for_sent2vec(training_file_name, n_neg_sample=5):
     neg_dict = {}
@@ -210,7 +211,7 @@ def job_posting_data_preprocessing(input_file_path):
     print data.count()
     np_data = data.as_matrix()
 
-    with open("./data/job_post_preprocessed.tsv", "w") as f:
+    with open(os.path.join(os.path.dirname(input_file_path), "job_post_preprocessed.tsv"), "w") as f:
         for index in range(np_data.shape[0]):
             # Maybe cut job post after 100 words (To nod overload the network)
             job_description = np_data[index][0]
@@ -230,4 +231,4 @@ def job_posting_data_preprocessing(input_file_path):
 
 if __name__ == "__main__":
     # tokens, U = get_pretrained_wordvec_from_file("./data/word_representations/glove.6B.100d.txt", (400000, 100))
-    job_posting_data_preprocessing("./data/data job posts.csv")
+    job_posting_data_preprocessing("../data/data job posts.csv")

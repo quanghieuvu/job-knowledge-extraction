@@ -1,6 +1,6 @@
 config = {
-    "webquestions_examples_file": "./data/job_post_preprocessed.tsv",
-    "word_embeddings_file": "./data/word_representations/glove.6B.100d.txt",
+    "webquestions_examples_file": "../../data/job_post_preprocessed.tsv",
+    "word_embeddings_file": "../../data/word_representations/glove.6B.100d.txt",
     "vocabulary_size": 400000,
     "embedding_size": 100,
     "num_classes": 6,
