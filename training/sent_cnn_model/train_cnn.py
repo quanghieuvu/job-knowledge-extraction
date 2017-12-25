@@ -102,10 +102,10 @@ def train_cnn(x_u_i, x_r_i, y, max_len, U, config, debug=True):
         # Checkpoint directory. Tensorflow assumes this directory already exists so we need to create it
         if debug==False:
             checkpoint_dir = os.path.abspath(os.path.join(out_dir, "checkpoints"))
-            checkpoint_prefix = os.path.join(checkpoint_dir, "model")
+            checkpoint_prefix = os.path.join(checkpoint_dir, "sent_cnn")
             if not os.path.exists(checkpoint_dir):
                 os.makedirs(checkpoint_dir)
-            saver = tf.train.Saver(tf.all_variables())
+            saver = tf.train.Saver()
         
         for _ in range(total_iter):
             indices = np.random.choice(len(x_u_train), batch_size)
@@ -133,7 +133,7 @@ def train_cnn(x_u_i, x_r_i, y, max_len, U, config, debug=True):
             time_str = datetime.datetime.now().isoformat()
             if debug == False:
                 train_summary_writer.add_summary(summaries, step)
-            if step % 50 == 0:
+            if step != 0 and step % 50 == 0:
                 feed_dict = {
                     cnn.input_x_u: x_u_val,
                     cnn.input_x_r: x_r_val,
@@ -167,6 +167,11 @@ def train_cnn(x_u_i, x_r_i, y, max_len, U, config, debug=True):
                     if dev_summary_writer:
                         dev_summary_writer.add_summary(summaries, step)
 
+                # Saving checkpoints. TODO: save the meta file only once.
+                if step != 0 and step % config["checkpoint_step"] == 0:
+                    checkpoint_name = checkpoint_prefix + "_{}_{}".format(len(config["filter_sizes"]), config["num_filters"], step)
+                    saver.save(sess, checkpoint_name, global_step=step)
+
 if __name__=="__main__":
     x_u_i, x_r_i, y, max_len, U = load_data(config.config)
-    train_cnn(x_u_i, x_r_i, y, max_len, U, config.config,debug=False)
+    train_cnn(x_u_i, x_r_i, y, max_len, U, config.config, debug=False)
