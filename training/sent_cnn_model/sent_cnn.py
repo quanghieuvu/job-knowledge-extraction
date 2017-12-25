@@ -31,7 +31,7 @@ class SentCNN(object):
         :embeddings_trainable: Train embeddings or not.
         """
         # Placeholders for input, output and dropout
-        
+
         # input_x_u: batch_size x sequence_length
         self.input_x_u = tf.placeholder(tf.int32, 
                                         [None, sequence_length],
@@ -48,7 +48,10 @@ class SentCNN(object):
         self.dropout_keep_prob = tf.placeholder(tf.float32, name="dropout_keep_prob")
         
         self.embedding_size = np.shape(init_embeddings)[1]
-        
+
+        # Store the sequence_length used for the training, needing for test inference.
+        self.sequence_length = tf.Variable(sequence_length, trainable=False, dtype=tf.int32, name="sequence_length")
+
         # Keeping track of l2 regularization loss (optional)
         l2_loss = tf.constant(0.0)
         

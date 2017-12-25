@@ -12,5 +12,6 @@ config = {
     "batch_size": 400,
     "val_size": 400,
     "l2_reg_lambda": 0.1,
-    "checkpoint_step": 100
+    "checkpoint_step": 100,
+    "max_len": 50
 }

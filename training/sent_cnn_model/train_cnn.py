@@ -66,7 +66,7 @@ def train_cnn(x_u_i, x_r_i, y, max_len, U, config, debug=True):
     x_r_train = x_r_i[val_size+1:]
     y_val = y[:val_size]
     y_train = y[val_size+1:]
-    
+
     with tf.Session() as sess:
         sess.run(tf.initialize_all_variables())
         

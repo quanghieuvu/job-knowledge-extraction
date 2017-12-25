@@ -1,6 +1,9 @@
 import numpy as np
 import re
 import os
+import sys
+sys.path.append(os.path.normpath(os.path.join(os.path.abspath(__file__), "../../")))
+import training.sent_cnn_model.config as config
 
 def get_evaluation_examples_for_sent2vec(training_file_name, n_neg_sample=5):
     neg_dict = {}
@@ -213,11 +216,11 @@ def job_posting_data_preprocessing(input_file_path):
 
     with open(os.path.join(os.path.dirname(input_file_path), "job_post_preprocessed.tsv"), "w") as f:
         for index in range(np_data.shape[0]):
-            # Cutting job post after 50 words (Simple case for now)
+            # Cutting job post after max_length words (Simple case for now see the config file)
             title = np_data[index][1]
             title = clean_custom(title).replace(" ", ".")
             job_description = clean_custom(np_data[index][0])
-            job_description = " ".join(job_description.split()[:50])
+            job_description = " ".join(job_description.split()[:config.config["max_len"]])
             random_sampling = []
             while len(random_sampling) != 10 or index in random_sampling or len(set(random_sampling)) != 10:
                 random_sampling = [random.randrange(0, np_data.shape[0]) for x in range(10)]
