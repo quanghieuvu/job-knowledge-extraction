@@ -13,7 +13,7 @@ def format_data_for_testing(job_post, titles, max_len=50):
     # Preprocess data
     titles = [dh.clean_custom(x).split() for x in titles]
     job_post = dh.clean_custom(job_post).split()
-    job_post = job_post[:50]
+    job_post = job_post[:max_len]
 
     # Pad sentences
     x_u = [dh.pad_sentences(job_post, max_len)]
@@ -34,15 +34,15 @@ def format_data_for_testing(job_post, titles, max_len=50):
     
     return (x_u_i, x_r_i, max_len, U)
 
-CHECKPOINT_DIR = "/home/pierre/Documents/Upwork/Code/job-knowledge-extraction/training/sent_cnn_model/runs/1514224634/checkpoints/"
+CHECKPOINT_DIR = "/home/pierre/Documents/Upwork/Code/job-knowledge-extraction/training/sent_cnn_model/runs/1514285552/checkpoints/"
 
-# TODO Implement inference for only one vector.
+# TODO freeze model.
 with tf.Session() as sess:
     saver = tf.train.import_meta_graph(os.path.join(CHECKPOINT_DIR, "sent_cnn_3_8-200.meta"))
     saver.restore(sess, tf.train.latest_checkpoint(CHECKPOINT_DIR))
     print "Model has been restored"
-    job_post = "We are currently looking for a senior to develop our application. The main technologies used will be react and little bit of angular. Also we have some cordova for the mobile app"
-    titles = ["BCC Specialist", "Chief Financial Officer" ,"Assistant to Managing Director", "Software Developer", "Chief Accountant/ Finance Assistant", "Software Engineer, Machine Learning"]
+    job_post = "ameria closed joint stock company is seeking a person to provide secretarial and administrative support to the office lobby"
+    titles = ["Factory Worker", "Chief Financial Officer" ,"receptionist", "Software Developer", "Chief Accountant/ Finance Assistant", "UI Designer"]
 
     graph = tf.get_default_graph()
 

@@ -155,7 +155,7 @@ class SentCNN(object):
             print "DEBUG: h_features -> %s" % self.h_features
             self.h_features_dropped = tf.nn.dropout(self.h_features, 
                                                     self.dropout_keep_prob, 
-                                                    noise_shape=[batch_size, 1, num_filters_total])
+                                                    noise_shape=[tf.shape(self.h_pool_flat_r)[0], 1, num_filters_total])
 
             self.h_dropped_u = self.h_features_dropped[:, :1, :]
             self.h_dropped_r = self.h_features_dropped[:, 1:, :]
