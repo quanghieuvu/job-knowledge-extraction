@@ -15,7 +15,7 @@ def load_data(config):
     Return training inputs, labels and pretrianed embeddings.
     """
     # Load raw data
-    wq_file = config["webquestions_examples_file"]
+    wq_file = config["data_file"]
     n_neg_sample = config["num_classes"] - 1
     x_u, x_r, y, max_len = dh.get_training_examples_for_softmax(wq_file, n_neg_sample)
     # Pad sentences

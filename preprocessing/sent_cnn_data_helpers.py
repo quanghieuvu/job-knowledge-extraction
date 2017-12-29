@@ -220,7 +220,7 @@ def job_posting_data_preprocessing(input_file_path):
             title = np_data[index][1]
             title = clean_custom(title).replace(" ", ".")
             job_description = clean_custom(np_data[index][0])
-            job_description = " ".join(job_description.split()[:config.config["max_len"]])
+            job_description = " ".join(job_description.split()[:config.config["max_len"]]) if config.config["max_len"] is not None else " ".join(job_description.split())
             random_sampling = []
             while len(random_sampling) != 10 or index in random_sampling or len(set(random_sampling)) != 10:
                 random_sampling = [random.randrange(0, np_data.shape[0]) for x in range(10)]
