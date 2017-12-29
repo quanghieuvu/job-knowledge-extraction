@@ -6,7 +6,7 @@ import os
 import sys
 sys.path.append(os.path.normpath(os.path.join(os.path.abspath(__file__), "../../../")))
 import preprocessing.sent_cnn_data_helpers as dh
-from sent_cnn import SentCNN
+from sent_cnn_1d import SentCNN
 import config
 
 def load_data(config):
@@ -35,7 +35,7 @@ def load_data(config):
     x_u_i = np.array(map(dctizes, x_u))
     x_r_i = np.array(map(dctizess, x_r))
     y = np.array(y)
-    
+
     return (x_u_i, x_r_i, y, max_len, U)
 
 def train_cnn(x_u_i, x_r_i, y, max_len, U, config, debug=True):

@@ -48,6 +48,9 @@ class SentCNN(object):
         self.dropout_keep_prob = tf.placeholder(tf.float32, name="dropout_keep_prob")
         
         self.embedding_size = np.shape(init_embeddings)[1]
+
+        # Store the sequence_length used for the training, needing for test inference.
+        self.sequence_length = tf.Variable(sequence_length, trainable=False, dtype=tf.int32, name="sequence_length")
         
         # Keeping track of l2 regularization loss (optional)
         l2_loss = tf.constant(0.0)
@@ -153,7 +156,7 @@ class SentCNN(object):
             print("DEBUG: h_features -> %s" % self.h_features)
             self.h_features_dropped = tf.nn.dropout(self.h_features, 
                                                     self.dropout_keep_prob, 
-                                                    noise_shape=[batch_size, 1, num_filters_total])
+                                                    noise_shape=[tf.shape(self.h_pool_flat_r)[0], 1, num_filters_total])
 
             self.h_dropped_u = self.h_features_dropped[:, :1, :]
             self.h_dropped_r = self.h_features_dropped[:, 1:, :]
