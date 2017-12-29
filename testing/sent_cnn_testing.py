@@ -34,11 +34,11 @@ def format_data_for_testing(job_post, titles, max_len=50):
     
     return (x_u_i, x_r_i, max_len, U)
 
-CHECKPOINT_DIR = "/home/pierre/Documents/Upwork/Code/job-knowledge-extraction/training/sent_cnn_model/runs/1514285552/checkpoints/"
+CHECKPOINT_DIR = "/home/pierre/Documents/Upwork/Code/job-knowledge-extraction/training/sent_cnn_model/runs/1514556320/checkpoints/"
 
 # TODO freeze model.
 with tf.Session() as sess:
-    saver = tf.train.import_meta_graph(os.path.join(CHECKPOINT_DIR, "sent_cnn_3_8-200.meta"))
+    saver = tf.train.import_meta_graph(os.path.join(CHECKPOINT_DIR, "sent_cnn_3_8-800.meta"))
     saver.restore(sess, tf.train.latest_checkpoint(CHECKPOINT_DIR))
     print "Model has been restored"
     job_post = "ameria closed joint stock company is seeking a person to provide secretarial and administrative support to the office lobby"

@@ -6,8 +6,11 @@ import os
 import sys
 sys.path.append(os.path.normpath(os.path.join(os.path.abspath(__file__), "../../../")))
 import preprocessing.sent_cnn_data_helpers as dh
-from sent_cnn_1d import SentCNN
+import sent_cnn
+import sent_cnn_ngrams
 import config
+import pandas as pd
+from sklearn.feature_extraction import DictVectorizer
 
 def load_data(config):
     """
@@ -15,7 +18,7 @@ def load_data(config):
     Return training inputs, labels and pretrianed embeddings.
     """
     # Load raw data
-    wq_file = config["webquestions_examples_file"]
+    wq_file = config["data_file"]
     n_neg_sample = config["num_classes"] - 1
     x_u, x_r, y, max_len = dh.get_training_examples_for_softmax(wq_file, n_neg_sample)
     # Pad sentences
@@ -38,17 +41,72 @@ def load_data(config):
 
     return (x_u_i, x_r_i, y, max_len, U)
 
-def train_cnn(x_u_i, x_r_i, y, max_len, U, config, debug=True):
+def load_data_ngrams(config):
+    wq_file = config["data_file"]
+    n_neg_sample = config["num_classes"] - 1
+    x_u, x_r, y, max_len = dh.get_training_examples_for_softmax(wq_file, n_neg_sample)
+    x_u = x_u[:3000]
+    x_r = x_r[:3000]
+    def get_n_grams(input, N=3, unique=True):
+        if unique:
+            return set([input[i: i + N] for i in range(len(input) - N - 1)])
+        else:
+            return [input[i: i + N] for i in range(len(input) - N - 1)]
+
+    def extract_trigrams(jobposts):
+        trigrams_set = set()
+        for index, c in enumerate(jobposts):
+            c = "*".join(c)
+            new_tri = get_n_grams(c)
+            trigrams_set = trigrams_set.union(new_tri)
+            if index % 100 == 0:
+                print "Processing Ngrams extraction from post {}".format(index), "Total number of Ngrams so far {}".format(
+                    len(trigrams_set))
+
+        return {k: v for v, k in enumerate(trigrams_set)}
+
+    trigrams_dict = extract_trigrams(x_u)
+    dict_vectorizer = DictVectorizer()
+    def extract_feature_dict(text, trigrams_dict):
+        new_tri = get_n_grams(text, N=3, unique=False)
+        features = {k:0 for v, k in trigrams_dict.iteritems()}
+        for trigram in new_tri:
+            # If trigram not in the vocabulary
+            if trigrams_dict.get(trigram, None) is None:
+                continue
+            features[trigrams_dict[trigram]] = features.get(trigrams_dict[trigram], 0) + 1
+        return np.squeeze(dict_vectorizer.fit_transform(features).toarray())
+
+    dctize = lambda input_list: [[x] for x in extract_feature_dict("*".join(input_list), trigrams_dict)]
+    dctizes = lambda words: map(dctize, words)
+    x_u_i = np.array(map(dctize, x_u))
+    print "Done"
+    x_r_i = np.array(map(dctizes, x_r))
+    y = np.array(y)
+    print x_u_i.shape
+    print x_r_i.shape
+    print y.shape
+    return (x_u_i, x_r_i, y, trigrams_dict)
+
+def train_cnn(x_u_i, x_r_i, y, max_len, U, config, debug=True, embeddings=True):
     
-    cnn = SentCNN(sequence_length=max_len, 
-                  num_classes=config["num_classes"], 
-                  init_embeddings=U, 
-                  filter_sizes=config["filter_sizes"], 
-                  num_filters=config["num_filters"],
-                  batch_size=config["batch_size"],
-                  embeddings_trainable=config["embeddings_trainable"],
-                  l2_reg_lambda=config["l2_reg_lambda"])
-    
+    if embeddings:
+        cnn = sent_cnn.SentCNN(sequence_length=max_len,
+                      num_classes=config["num_classes"],
+                      init_embeddings=U,
+                      filter_sizes=config["filter_sizes"],
+                      num_filters=config["num_filters"],
+                      batch_size=config["batch_size"],
+                      embeddings_trainable=config["embeddings_trainable"],
+                      l2_reg_lambda=config["l2_reg_lambda"])
+    else:
+        cnn = sent_cnn_ngrams.SentCNN(sequence_length=len(U),
+                      num_classes=config["num_classes"],
+                      vocabulary_ngrams=U,
+                      filter_sizes=config["filter_sizes"],
+                      num_filters=config["num_filters"],
+                      l2_reg_lambda=config["l2_reg_lambda"])
+
     total_iter = config["total_iter"]
     batch_size = config["batch_size"]
     global_step = tf.Variable(0, name="global_step", trainable=True)
@@ -173,5 +231,10 @@ def train_cnn(x_u_i, x_r_i, y, max_len, U, config, debug=True):
                     saver.save(sess, checkpoint_name, global_step=step)
 
 if __name__=="__main__":
-    x_u_i, x_r_i, y, max_len, U = load_data(config.config)
-    train_cnn(x_u_i, x_r_i, y, max_len, U, config.config, debug=False)
+    # Train embeddings approach
+    # x_u_i, x_r_i, y, max_len, U = load_data(config.config)
+    # train_cnn(x_u_i, x_r_i, y, max_len, U, config.config, debug=False)
+
+    #Train ngrams approach
+    x_u_i, x_r_i, y, U = load_data_ngrams(config.config)
+    train_cnn(x_u_i, x_r_i, y, None, U, config.config, debug=False, embeddings=False)

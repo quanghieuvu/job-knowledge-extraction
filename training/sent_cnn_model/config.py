@@ -1,5 +1,5 @@
 config = {
-    "webquestions_examples_file": "../../data/job_post_preprocessed.tsv",
+    "data_file": "../../data/job_post_preprocessed.tsv",
     "word_embeddings_file": "../../data/word_representations/glove.6B.100d.txt",
     "vocabulary_size": 400000,
     "embedding_size": 100,
@@ -13,5 +13,5 @@ config = {
     "val_size": 400,
     "l2_reg_lambda": 0.1,
     "checkpoint_step": 100,
-    "max_len": 50
+    "max_len": None
 }
