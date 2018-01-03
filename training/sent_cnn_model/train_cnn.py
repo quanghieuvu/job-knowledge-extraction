@@ -6,7 +6,7 @@ import os
 import sys
 sys.path.append(os.path.normpath(os.path.join(os.path.abspath(__file__), "../../../")))
 import preprocessing.sent_cnn_data_helpers as dh
-from sent_cnn_1d import SentCNN
+from sent_cnn import SentCNN
 import config
 
 def load_data(config):
