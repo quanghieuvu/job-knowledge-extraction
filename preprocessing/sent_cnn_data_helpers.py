@@ -72,6 +72,7 @@ def get_training_examples(training_file_name, n_neg=5000):
             u_str = clean_str(data[1].strip()).split(" ")
             r_str = clean_str(data[2].strip()).split(" ")
             max_len = max(len(u_str), len(r_str), max_len)
+
             if f1 >= 0.5:
                 positive_utterances.append(u_str)
                 positive_relations.append(r_str)
@@ -89,7 +90,7 @@ def get_training_examples(training_file_name, n_neg=5000):
     
     return (x_u, x_r, y, max_len)
 
-def get_training_examples_for_softmax(training_file_name, n_neg_sample=5):
+def get_training_examples_for_softmax(training_file_name, n_neg_sample=5, double_net=False):
     """
     Load training data file, and split the data into words and labels.
     Return utterances, relation words, 
@@ -98,6 +99,8 @@ def get_training_examples_for_softmax(training_file_name, n_neg_sample=5):
     """
     neg_dict = {}
     max_len = 0
+    max_len_u = 0
+    max_len_r = 0
     wqn_lst = []
     x_u = [] # Question
     x_r = [] # [[[topics2], [topicspos2].. etc]]
@@ -111,7 +114,9 @@ def get_training_examples_for_softmax(training_file_name, n_neg_sample=5):
             r_str = clean_str(data[2].strip()).split(" ")
             wqn = data[3].strip()
             max_len = max(len(u_str), len(r_str), max_len)
-            
+            max_len_u = max(len(u_str), max_len_u)
+            max_len_r = max(len(r_str), max_len_r)
+
             if f1 >= 0.5:
                 wqn_lst.append(wqn)
                 x_u.append(u_str)
@@ -137,6 +142,9 @@ def get_training_examples_for_softmax(training_file_name, n_neg_sample=5):
             x_r[i][0] = x_r[i][y[i]]
             x_r[i][y[i]] = tmp
     
+        if double_net:
+            return (x_u, x_r, y, max_len_u, max_len_r)
+
     return (x_u, x_r, y, max_len)
         
 

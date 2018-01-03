@@ -6,7 +6,7 @@ import os
 import sys
 sys.path.append(os.path.normpath(os.path.join(os.path.abspath(__file__), "../../../")))
 import preprocessing.sent_cnn_data_helpers as dh
-from sent_cnn import SentCNN
+from double_net_sent_cnn import SentCNN
 import config
 
 def load_data(config):
@@ -38,17 +38,58 @@ def load_data(config):
 
     return (x_u_i, x_r_i, y, max_len, U)
 
+def load_data_double_net(config):
+    """
+    Load training examples and pretrained word embeddings from disk.
+    Return training inputs, labels and pretrianed embeddings.
+    """
+    # Load raw data
+    wq_file = config["data_file"]
+    n_neg_sample = config["num_classes"] - 1
+    x_u, x_r, y, max_len_u, max_len_r = dh.get_training_examples_for_softmax(wq_file, n_neg_sample, double_net=True)
+    # Pad sentences
+    x_u = [dh.pad_sentences(x, max_len_u) for x in x_u]
+    x_r = [[dh.pad_sentences(u, max_len_r) for u in x] for x in x_r]
+    # Load tokens and pretrained embeddings
+    we_file = config["word_embeddings_file"]
+    voc_size = config["vocabulary_size"]
+    embedding_size = config["embedding_size"]
+    tokens, U = dh.get_pretrained_wordvec_from_file(we_file, (voc_size, embedding_size))
+    # Represent sentences as list(nparray) of ints
+    dctize = lambda word: tokens[word] if tokens.has_key(word) else tokens["pad"]
+    dctizes = lambda words: map(dctize, words)
+    dctizess = lambda wordss: map(dctizes, wordss)
+    x_u_i = np.array(map(dctizes, x_u))
+    x_r_i = np.array(map(dctizess, x_r))
+    y = np.array(y)
+
+    return (x_u_i, x_r_i, y, max_len_u, max_len_r, U)
+
 def train_cnn(x_u_i, x_r_i, y, max_len, U, config, debug=True):
     
-    cnn = SentCNN(sequence_length=max_len, 
-                  num_classes=config["num_classes"], 
-                  init_embeddings=U, 
-                  filter_sizes=config["filter_sizes"], 
-                  num_filters=config["num_filters"],
-                  batch_size=config["batch_size"],
-                  embeddings_trainable=config["embeddings_trainable"],
-                  l2_reg_lambda=config["l2_reg_lambda"])
-    
+
+    if config["double_net"]:
+        cnn = SentCNN(doc_sequence_length=max_len["max_len_u"],
+                      query_sequence_length=max_len["max_len_r"],
+                      num_classes=config["num_classes"],
+                      init_embeddings=U,
+                      filter_sizes=config["filter_sizes"],
+                      num_filters=config["num_filters"],
+                      batch_size=config["batch_size"],
+                      embeddings_trainable=config["embeddings_trainable"],
+                      l2_reg_lambda=config["l2_reg_lambda"])
+        print "Training double_net_sent_cnn..."
+    else:
+        cnn = SentCNN(sequence_length=max_len,
+                      num_classes=config["num_classes"],
+                      init_embeddings=U,
+                      filter_sizes=config["filter_sizes"],
+                      num_filters=config["num_filters"],
+                      batch_size=config["batch_size"],
+                      embeddings_trainable=config["embeddings_trainable"],
+                      l2_reg_lambda=config["l2_reg_lambda"])
+        print "Training double_net_sent_cnn..."
+
     total_iter = config["total_iter"]
     batch_size = config["batch_size"]
     global_step = tf.Variable(0, name="global_step", trainable=True)
@@ -173,5 +214,11 @@ def train_cnn(x_u_i, x_r_i, y, max_len, U, config, debug=True):
                     saver.save(sess, checkpoint_name, global_step=step)
 
 if __name__=="__main__":
-    x_u_i, x_r_i, y, max_len, U = load_data(config.config)
-    train_cnn(x_u_i, x_r_i, y, max_len, U, config.config, debug=False)
+    if not config.config["double_net"]:
+        # Train Normal sent_cnn
+        x_u_i, x_r_i, y, max_len, U = load_data(config.config)
+        train_cnn(x_u_i, x_r_i, y, max_len, U, config.config, debug=False)
+    else:
+        # Train double_net_sent_cnn
+        x_u_i, x_r_i, y, max_len_u, max_len_r, U = load_data_double_net(config.config)
+        train_cnn(x_u_i, x_r_i, y, {"max_len_u": max_len_u, "max_len_r": max_len_r}, U, config.config, debug=False)
