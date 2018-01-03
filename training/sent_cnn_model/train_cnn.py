@@ -6,7 +6,8 @@ import os
 import sys
 sys.path.append(os.path.normpath(os.path.join(os.path.abspath(__file__), "../../../")))
 import preprocessing.sent_cnn_data_helpers as dh
-from double_net_sent_cnn import SentCNN
+import double_net_sent_cnn
+import sent_cnn
 import config
 
 def load_data(config):
@@ -63,13 +64,12 @@ def load_data_double_net(config):
     x_r_i = np.array(map(dctizess, x_r))
     y = np.array(y)
 
-    return (x_u_i, x_r_i, y, max_len_u, max_len_r, U)
+    return (x_u_i, x_r_i, y, {"max_len_u": max_len_u, "max_len_r": max_len_r}, U)
 
 def train_cnn(x_u_i, x_r_i, y, max_len, U, config, debug=True):
     
-
     if config["double_net"]:
-        cnn = SentCNN(doc_sequence_length=max_len["max_len_u"],
+        cnn = double_net_sent_cnn.SentCNN(doc_sequence_length=max_len["max_len_u"],
                       query_sequence_length=max_len["max_len_r"],
                       num_classes=config["num_classes"],
                       init_embeddings=U,
@@ -80,7 +80,7 @@ def train_cnn(x_u_i, x_r_i, y, max_len, U, config, debug=True):
                       l2_reg_lambda=config["l2_reg_lambda"])
         print "Training double_net_sent_cnn..."
     else:
-        cnn = SentCNN(sequence_length=max_len,
+        cnn = sent_cnn.SentCNN(sequence_length=max_len,
                       num_classes=config["num_classes"],
                       init_embeddings=U,
                       filter_sizes=config["filter_sizes"],
@@ -88,7 +88,7 @@ def train_cnn(x_u_i, x_r_i, y, max_len, U, config, debug=True):
                       batch_size=config["batch_size"],
                       embeddings_trainable=config["embeddings_trainable"],
                       l2_reg_lambda=config["l2_reg_lambda"])
-        print "Training double_net_sent_cnn..."
+        print "Training classic sent_cnn..."
 
     total_iter = config["total_iter"]
     batch_size = config["batch_size"]
@@ -215,10 +215,9 @@ def train_cnn(x_u_i, x_r_i, y, max_len, U, config, debug=True):
 
 if __name__=="__main__":
     if not config.config["double_net"]:
-        # Train Normal sent_cnn
+        # Load Data for sent_cnn
         x_u_i, x_r_i, y, max_len, U = load_data(config.config)
-        train_cnn(x_u_i, x_r_i, y, max_len, U, config.config, debug=False)
     else:
-        # Train double_net_sent_cnn
-        x_u_i, x_r_i, y, max_len_u, max_len_r, U = load_data_double_net(config.config)
-        train_cnn(x_u_i, x_r_i, y, {"max_len_u": max_len_u, "max_len_r": max_len_r}, U, config.config, debug=False)
+        # Load Data for double_net_sent_cnn
+        x_u_i, x_r_i, y, max_len, U = load_data_double_net(config.config)
+    train_cnn(x_u_i, x_r_i, y, max_len, U, config.config, debug=False)
