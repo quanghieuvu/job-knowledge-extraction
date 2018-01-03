@@ -9,16 +9,17 @@ class SentCNN(object):
     """
     
     def __init__(self, 
-                 sequence_length, 
+                 doc_sequence_length, 
                  num_classes, 
                  init_embeddings, 
                  filter_sizes, 
                  num_filters,
                  batch_size, # only need this for dropout layer
                  embeddings_trainable=False,
-                 l2_reg_lambda=0.0):
+                 l2_reg_lambda=0.0,
+                 query_sequence_length=20):
         """
-        :param sequence_length: The length of our sentences. Here we always pad
+        :param doc_sequence_length: The length of our sentences. Here we always pad
         our sentences to have the same length (depending on the longest sentences
         in our dataset).
         :param num_classes: Number of classes in the output layer.
@@ -32,13 +33,13 @@ class SentCNN(object):
         """
         # Placeholders for input, output and dropout
 
-        # input_x_u: batch_size x sequence_length
+        # input_x_u: batch_size x doc_sequence_length
         self.input_x_u = tf.placeholder(tf.int32, 
-                                        [None, sequence_length],
+                                        [None, doc_sequence_length],
                                         name="input_x_u")
-        # input_x_r: batch_size x num_classes x sequence_length
+        # input_x_r: batch_size x num_classes x doc_sequence_length
         self.input_x_r = tf.placeholder(tf.int32, 
-                                        [None, num_classes, sequence_length],
+                                        [None, num_classes, doc_sequence_length],
                                         name="input_x_r")
         # input_y: batch_size, 
         self.input_y = tf.placeholder(tf.int64, 
@@ -49,8 +50,9 @@ class SentCNN(object):
         
         self.embedding_size = np.shape(init_embeddings)[1]
 
-        # Store the sequence_length used for the training, needed for test inference.
-        self.sequence_length = tf.Variable(sequence_length, trainable=False, dtype=tf.int32, name="sequence_length")
+        # Store the doc_sequence_length and query_sequence_length used for the training, needed for test inference.
+        self.doc_sequence_length = tf.Variable(doc_sequence_length, trainable=False, dtype=tf.int32, name="doc_sequence_length")
+        self.query_sequence_length = tf.Variable(query_sequence_length, trainable=False, dtype=tf.int32, name="query_sequence_length")
 
         # Keeping track of l2 regularization loss (optional)
         l2_loss = tf.constant(0.0)
@@ -62,11 +64,11 @@ class SentCNN(object):
                             dtype=tf.float32,
                             name='W')
 
-            # batch_size x sequence_length x embedding_size
+            # batch_size x doc_sequence_length x embedding_size
             self.embedded_u = tf.nn.embedding_lookup(W, self.input_x_u)
             print("DEBUG: embedded_u -> %s" % self.embedded_u)
 
-            # batch_size x num_classes x sequence_length x embedding_size
+            # batch_size x num_classes x doc_sequence_length x embedding_size
             self.embedded_r = tf.nn.embedding_lookup(W, self.input_x_r)
             print("DEBUG: embedded_r -> %s" % self.embedded_r)
 
@@ -77,25 +79,29 @@ class SentCNN(object):
             with tf.name_scope("conv-maxpool-%s-u" % filter_size):
                 # Convolution layer
                 filter_shape = [filter_size, self.embedding_size, num_filters]
-                W = tf.Variable(tf.truncated_normal(filter_shape, stddev=0.1), name='W')
-                b = tf.Variable(tf.constant(0.1, shape=[num_filters]), name='b')
-                l2_loss += tf.nn.l2_loss(W)
-                l2_loss += tf.nn.l2_loss(b)
+                W_u = tf.Variable(tf.truncated_normal(filter_shape, stddev=0.1), name='W_u')
+                b_u = tf.Variable(tf.constant(0.1, shape=[num_filters]), name='b_u')
+                W_r = tf.Variable(tf.truncated_normal(filter_shape, stddev=0.1), name='W_r')
+                b_r = tf.Variable(tf.constant(0.1, shape=[num_filters]), name='b_r')
+                l2_loss += tf.nn.l2_loss(W_u)
+                l2_loss += tf.nn.l2_loss(b_u)
+                l2_loss += tf.nn.l2_loss(W_r)
+                l2_loss += tf.nn.l2_loss(b_r)
 
                 conv_u1d = tf.nn.conv1d(
                     self.embedded_u,
-                    W,
+                    W_u,
                     stride=1,
                     padding="VALID",
                     name="conv-u")
 
                 # Apply nonlinearity
-                h_u = tf.nn.sigmoid(tf.nn.bias_add(conv_u1d, b), name="activation-u")
+                h_u = tf.nn.sigmoid(tf.nn.bias_add(conv_u1d, b_u), name="activation-u")
 
                 # Maxpooling over outputs
                 pooled_u1d = tf.nn.pool(
                     h_u,
-                    window_shape=[sequence_length - filter_size + 1],
+                    window_shape=[doc_sequence_length - filter_size + 1],
                     pooling_type="MAX",
                     padding="VALID",
                     strides=[1],
@@ -109,16 +115,16 @@ class SentCNN(object):
                     embedded_r_j = self.embedded_r[:, j, :, :]
                     conv_r_j = tf.nn.conv1d(
                         embedded_r_j,
-                        W, 
+                        W_r, 
                         stride=1,
                         padding="VALID",
                         name="conv-r-%s" % j)
                     
-                    h_r_j = tf.nn.sigmoid(tf.nn.bias_add(conv_r_j, b), name="activation-r-%s" % j)
+                    h_r_j = tf.nn.sigmoid(tf.nn.bias_add(conv_r_j, b_r), name="activation-r-%s" % j)
                     
                     pooled_r_j = tf.nn.pool(
                         h_r_j,
-                        window_shape=[sequence_length - filter_size + 1],
+                        window_shape=[doc_sequence_length - filter_size + 1],
                         pooling_type="MAX",
                         strides=[1],
                         padding="VALID",
