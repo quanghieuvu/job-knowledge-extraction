@@ -96,7 +96,7 @@ class SentCNN(object):
                     name="conv-u")
 
                 # Apply nonlinearity
-                h_u = tf.nn.sigmoid(tf.nn.bias_add(conv_u1d, b_u), name="activation-u")
+                h_u = tf.nn.tanh(tf.nn.bias_add(conv_u1d, b_u), name="activation-u")
 
                 # Maxpooling over outputs
                 pooled_u1d = tf.nn.pool(
