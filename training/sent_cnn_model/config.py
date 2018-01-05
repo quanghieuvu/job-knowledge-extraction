@@ -6,7 +6,7 @@ config = {
     "num_classes": 6,
     "filter_sizes": [3, 4, 5],
     "num_filters": 8,
-    "dropout_keep_prob": 0.75,
+    "dropout_keep_prob": 0.85,
     "embeddings_trainable": True,
     "total_iter": 100000,
     "batch_size": 256,

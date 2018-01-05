@@ -167,8 +167,8 @@ class SentCNN(object):
 
         # Final Fully Connected Layer
         with tf.name_scope("final_fully_connected"):
-            self.fc_final_u = tf.contrib.layers.fully_connected(inputs=self.h_dropped_u, num_outputs=128, activation_fn=tf.nn.tanh, weights_initializer=tf.contrib.layers.xavier_initializer(), biases_initializer=tf.contrib.layers.xavier_initializer(), trainable=True)
-            self.fc_final_r = tf.contrib.layers.fully_connected(inputs=self.h_dropped_r, num_outputs=128, activation_fn=tf.nn.tanh, weights_initializer=tf.contrib.layers.xavier_initializer(), biases_initializer=tf.contrib.layers.xavier_initializer(), trainable=True)
+            self.fc_final_u = tf.contrib.layers.fully_connected(inputs=self.h_dropped_u, num_outputs=128, activation_fn=tf.nn.relu6, weights_initializer=tf.contrib.layers.xavier_initializer(), biases_initializer=tf.contrib.layers.xavier_initializer(), trainable=True, weights_regularizer=tf.contrib.layers.l2_regularizer(scale=l2_reg_lambda), biases_regularizer=tf.contrib.layers.l2_regularizer(scale=l2_reg_lambda))
+            self.fc_final_r = tf.contrib.layers.fully_connected(inputs=self.h_dropped_r, num_outputs=128, activation_fn=tf.nn.relu6, weights_initializer=tf.contrib.layers.xavier_initializer(), biases_initializer=tf.contrib.layers.xavier_initializer(), trainable=True, weights_regularizer=tf.contrib.layers.l2_regularizer(scale=l2_reg_lambda), biases_regularizer=tf.contrib.layers.l2_regularizer(scale=l2_reg_lambda))
         
         # cosine layer - final scores and predictions
         with tf.name_scope("cosine_layer"):
@@ -188,7 +188,7 @@ class SentCNN(object):
         # softmax regression - loss and prediction
         with tf.name_scope("loss"):
             losses = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=100*self.cosine, labels=self.input_y)
-            self.loss = tf.reduce_mean(losses) + l2_reg_lambda * l2_loss / 2
+            self.loss = tf.reduce_mean(losses) + l2_reg_lambda * l2_loss / 2 + tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
             
         # Calculate Accuracy
         with tf.name_scope("accuracy"):
