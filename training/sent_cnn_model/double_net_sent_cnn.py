@@ -142,7 +142,6 @@ class SentCNN(object):
         self.h_pool_u = tf.concat(axis=2, values=pooled_outputs_u)
         print("DEBUG: h_pool_u -> %s" % self.h_pool_u)
         # batch_size x 1 x num_filters_total
-        #self.h_pool_flat_u = tf.reshape(self.h_pool_u, [-1, 1, num_filters_total])
         self.h_pool_flat_u = self.h_pool_u
         print("DEBUG: h_pool_flat_u -> %s" % self.h_pool_flat_u)
         
@@ -152,7 +151,6 @@ class SentCNN(object):
         print("DEBUG: h_pool_r -> %s" % self.h_pool_r)
 
         # h_pool_flat_r: batch_size x num_classes X num_filters_total
-        #self.h_pool_flat_r = tf.reshape(self.h_pool_r, [-1, num_classes, num_filters_total])
         self.h_pool_flat_r = self.h_pool_r
         print("DEBUG: h_pool_flat_r -> %s" % self.h_pool_flat_r)
         
@@ -166,15 +164,20 @@ class SentCNN(object):
 
             self.h_dropped_u = self.h_features_dropped[:, :1, :]
             self.h_dropped_r = self.h_features_dropped[:, 1:, :]
+
+        # Final Fully Connected Layer
+        with tf.name_scope("final_fully_connected"):
+            self.fc_final_u = tf.contrib.layers.fully_connected(inputs=self.h_dropped_u, num_outputs=128, activation_fn=tf.nn.tanh, weights_initializer=tf.contrib.layers.xavier_initializer(), biases_initializer=tf.contrib.layers.xavier_initializer(), trainable=True)
+            self.fc_final_r = tf.contrib.layers.fully_connected(inputs=self.h_dropped_r, num_outputs=128, activation_fn=tf.nn.tanh, weights_initializer=tf.contrib.layers.xavier_initializer(), biases_initializer=tf.contrib.layers.xavier_initializer(), trainable=True)
         
         # cosine layer - final scores and predictions
         with tf.name_scope("cosine_layer"):
-            self.dot =  tf.reduce_sum(tf.multiply(self.h_dropped_u,
-                                        self.h_dropped_r), 2)
+            self.dot =  tf.reduce_sum(tf.multiply(self.fc_final_u,
+                                        self.fc_final_r), 2)
             print("DEBUG: dot -> %s" % self.dot)
-            self.sqrt_u = tf.sqrt(tf.reduce_sum(self.h_dropped_u**2, 2))
+            self.sqrt_u = tf.sqrt(tf.reduce_sum(self.fc_final_u**2, 2))
             print("DEBUG: sqrt_u -> %s" % self.sqrt_u)
-            self.sqrt_r = tf.sqrt(tf.reduce_sum(self.h_dropped_r**2, 2))
+            self.sqrt_r = tf.sqrt(tf.reduce_sum(self.fc_final_r**2, 2))
             print("DEBUG: sqrt_r -> %s" % self.sqrt_r)
             epsilon = 1e-5
             self.cosine = tf.maximum(self.dot / (tf.maximum(self.sqrt_u * self.sqrt_r, epsilon)), epsilon)
