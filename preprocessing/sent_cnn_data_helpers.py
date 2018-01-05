@@ -211,7 +211,7 @@ def clean_custom(to_process):
     to_process = to_process.replace("\n", " ")  # take off \n at the end of line
     to_process = re.sub(r'[^\w\s]', ' ', to_process)  # replace punctuation with ' '
     to_process = "".join([c for c in to_process if (c.isalnum() or c == " ")])  # take off all non alnum char
-    to_process = " ".join(to_process.split())  # Remove multiple spaces and join with * "a    b"= "a*b"
+    to_process = " ".join(to_process.split())  # Remove multiple spaces and join with * "a
     return to_process
 
 def job_posting_data_preprocessing(input_file_path):

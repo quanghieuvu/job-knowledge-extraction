@@ -12,7 +12,7 @@ config = {
     "batch_size": 256,
     "val_size": 1000,
     "l2_reg_lambda": 0.1,
-    "checkpoint_step": 200,
+    "checkpoint_step": 300,
     "max_len": 50,
     "double_net": True
 }

@@ -167,8 +167,23 @@ class SentCNN(object):
 
         # Final Fully Connected Layer
         with tf.name_scope("final_fully_connected"):
-            self.fc_final_u = tf.contrib.layers.fully_connected(inputs=self.h_dropped_u, num_outputs=128, activation_fn=tf.nn.relu6, weights_initializer=tf.contrib.layers.xavier_initializer(), biases_initializer=tf.contrib.layers.xavier_initializer(), trainable=True, weights_regularizer=tf.contrib.layers.l2_regularizer(scale=l2_reg_lambda), biases_regularizer=tf.contrib.layers.l2_regularizer(scale=l2_reg_lambda))
-            self.fc_final_r = tf.contrib.layers.fully_connected(inputs=self.h_dropped_r, num_outputs=128, activation_fn=tf.nn.relu6, weights_initializer=tf.contrib.layers.xavier_initializer(), biases_initializer=tf.contrib.layers.xavier_initializer(), trainable=True, weights_regularizer=tf.contrib.layers.l2_regularizer(scale=l2_reg_lambda), biases_regularizer=tf.contrib.layers.l2_regularizer(scale=l2_reg_lambda))
+            self.fc_final_u = tf.contrib.layers.fully_connected(inputs=self.h_dropped_u,
+                                                                num_outputs=128,
+                                                                activation_fn=tf.nn.relu6,
+                                                                weights_initializer=tf.contrib.layers.xavier_initializer(),
+                                                                biases_initializer=tf.contrib.layers.xavier_initializer(),
+                                                                trainable=True,
+                                                                weights_regularizer=tf.contrib.layers.l2_regularizer(scale=l2_reg_lambda),
+                                                                biases_regularizer=tf.contrib.layers.l2_regularizer(scale=l2_reg_lambda))
+
+            self.fc_final_r = tf.contrib.layers.fully_connected(inputs=self.h_dropped_r,
+                                                                num_outputs=128,
+                                                                activation_fn=tf.nn.relu6,
+                                                                weights_initializer=tf.contrib.layers.xavier_initializer(),
+                                                                biases_initializer=tf.contrib.layers.xavier_initializer(),
+                                                                trainable=True,
+                                                                weights_regularizer=tf.contrib.layers.l2_regularizer(scale=l2_reg_lambda),
+                                                                biases_regularizer=tf.contrib.layers.l2_regularizer(scale=l2_reg_lambda))
         
         # cosine layer - final scores and predictions
         with tf.name_scope("cosine_layer"):
