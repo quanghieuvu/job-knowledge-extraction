@@ -120,7 +120,7 @@ class SentCNN(object):
                         padding="VALID",
                         name="conv-r-%s" % j)
                     
-                    h_r_j = tf.nn.sigmoid(tf.nn.bias_add(conv_r_j, b_r), name="activation-r-%s" % j)
+                    h_r_j = tf.nn.tanh(tf.nn.bias_add(conv_r_j, b_r), name="activation-r-%s" % j)
                     
                     pooled_r_j = tf.nn.pool(
                         h_r_j,
