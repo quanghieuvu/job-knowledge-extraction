@@ -120,7 +120,7 @@ class SentCNN(object):
                         padding="VALID",
                         name="conv-r-%s" % j)
                     
-                    h_r_j = tf.nn.sigmoid(tf.nn.bias_add(conv_r_j, b_r), name="activation-r-%s" % j)
+                    h_r_j = tf.nn.tanh(tf.nn.bias_add(conv_r_j, b_r), name="activation-r-%s" % j)
                     
                     pooled_r_j = tf.nn.pool(
                         h_r_j,
@@ -154,6 +154,11 @@ class SentCNN(object):
         self.h_pool_flat_r = self.h_pool_r
         print("DEBUG: h_pool_flat_r -> %s" % self.h_pool_flat_r)
         
+
+        # Apply non linearity after pooling
+        self.h_pool_flat_r = tf.nn.tanh(self.h_pool_flat_r)
+        self.h_pool_flat_u = tf.nn.tanh(self.h_pool_flat_u)
+
         # Add dropout layer to avoid overfitting
         with tf.name_scope("dropout"):
             self.h_features = tf.concat(axis=1, values=[self.h_pool_flat_u, self.h_pool_flat_r])
@@ -169,7 +174,7 @@ class SentCNN(object):
         with tf.name_scope("final_fully_connected"):
             self.fc_final_u = tf.contrib.layers.fully_connected(inputs=self.h_dropped_u,
                                                                 num_outputs=128,
-                                                                activation_fn=tf.nn.relu6,
+                                                                activation_fn=None,
                                                                 weights_initializer=tf.contrib.layers.xavier_initializer(),
                                                                 biases_initializer=tf.contrib.layers.xavier_initializer(),
                                                                 trainable=True,
@@ -178,7 +183,7 @@ class SentCNN(object):
 
             self.fc_final_r = tf.contrib.layers.fully_connected(inputs=self.h_dropped_r,
                                                                 num_outputs=128,
-                                                                activation_fn=tf.nn.relu6,
+                                                                activation_fn=None,
                                                                 weights_initializer=tf.contrib.layers.xavier_initializer(),
                                                                 biases_initializer=tf.contrib.layers.xavier_initializer(),
                                                                 trainable=True,
@@ -202,7 +207,7 @@ class SentCNN(object):
         
         # softmax regression - loss and prediction
         with tf.name_scope("loss"):
-            losses = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=100*self.cosine, labels=self.input_y)
+            losses = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.cosine, labels=self.input_y)
             self.loss = tf.reduce_mean(losses) + l2_reg_lambda * l2_loss / 2 + tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
             
         # Calculate Accuracy

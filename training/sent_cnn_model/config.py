@@ -4,8 +4,8 @@ config = {
     "vocabulary_size": 400000,
     "embedding_size": 100,
     "num_classes": 6,
-    "filter_sizes": [3, 4, 5],
-    "num_filters": 8,
+    "filter_sizes": [5],
+    "num_filters": 200,      # Ideally 256 to 1000
     "dropout_keep_prob": 0.85,
     "embeddings_trainable": True,
     "total_iter": 100000,
